@@ -18,6 +18,11 @@ impl Repository {
 		Ok(Self { repo })
 	}
 	
+	/// Create a Repository from an existing Git2Repository
+	pub fn from_git2_repo(repo: Git2Repository) -> Self {
+		Self { repo }
+	}
+	
 	/// Get the path to the repository's working directory
 	pub fn workdir(&self) -> Option<&Path> {
 		self.repo.workdir()

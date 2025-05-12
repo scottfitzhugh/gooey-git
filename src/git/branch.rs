@@ -22,6 +22,10 @@ impl<'repo> Branch<'repo> {
 		self.branch.is_head()
 	}
 	
+	pub fn is_checked_out(&self) -> bool {
+		self.branch.is_head()
+	}
+	
 	pub fn upstream(&self) -> Result<Branch<'repo>, Error> {
 		let upstream = self.branch.upstream()?;
 		Ok(Branch::from_git2_branch(upstream))

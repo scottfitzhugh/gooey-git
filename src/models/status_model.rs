@@ -5,12 +5,14 @@ use std::cell::RefCell;
 use crate::git::status::{self, StatusEntry};
 use crate::git::repository::Repository;
 
+#[derive(Clone)]
 pub struct StatusItem {
 	pub path: String,
 	pub status_text: String,
 	pub is_staged: bool,
 }
 
+#[derive(Clone)]
 pub struct StatusModel {
 	staged_items: Vec<StatusItem>,
 	unstaged_items: Vec<StatusItem>,

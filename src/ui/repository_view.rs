@@ -1,17 +1,30 @@
 use libadwaita as adw;
 use adw::prelude::*;
-use gtk4::{Box, Label, ListBox, Orientation, ScrolledWindow, SelectionMode};
+use gtk4::{Box, Label, ListBox, Orientation, ScrolledWindow, SelectionMode, ListBoxRow};
+use std::rc::Rc;
+use std::cell::RefCell;
+
+use crate::models::repository_model::RepositoryModel;
+use crate::models::branch_model::BranchModel;
 
 pub struct RepositoryView {
 	container: Box,
+	repo_model: Rc<RefCell<RepositoryModel>>,
+	branch_model: BranchModel,
+	branches_list: ListBox,
+	remotes_list: ListBox,
+	placeholder: Label,
 }
 
 impl RepositoryView {
 	pub fn new() -> Self {
+		// Create the branch model
+		let branch_model = BranchModel::new();
+		
 		// Create main container
 		let container = Box::new(Orientation::Vertical, 0);
 		
-		// Create section title
+		// Create repository title label
 		let title = Label::builder()
 			.label("Repository")
 			.halign(gtk4::Align::Start)
@@ -93,10 +106,58 @@ impl RepositoryView {
 			
 		container.append(&placeholder);
 		
-		Self { container }
+		// Create a repository model but it will be replaced in set_repo_model
+		let repo_model = Rc::new(RefCell::new(RepositoryModel::new()));
+		
+		Self { 
+			container,
+			repo_model,
+			branch_model,
+			branches_list,
+			remotes_list,
+			placeholder
+		}
 	}
 	
 	pub fn widget(&self) -> Box {
 		self.container.clone()
+	}
+	
+	pub fn set_repo_model(&mut self, repo_model: Rc<RefCell<RepositoryModel>>) {
+		self.repo_model = repo_model;
+		self.update_view();
+	}
+	
+	pub fn update_view(&mut self) {
+		// Clear existing items
+		while let Some(child) = self.branches_list.first_child() {
+			self.branches_list.remove(&child);
+		}
+		
+		while let Some(child) = self.remotes_list.first_child() {
+			self.remotes_list.remove(&child);
+		}
+		
+		let repo_model = self.repo_model.borrow();
+		
+		if let Some(repo) = repo_model.repo() {
+			// Hide the placeholder
+			self.placeholder.set_visible(false);
+			
+			// Update branch information
+			if let Ok(()) = self.branch_model.update(repo) {
+				for branch_name in self.branch_model.branches() {
+					let row = ListBoxRow::new();
+					let label = Label::new(Some(branch_name));
+					row.set_child(Some(&label));
+					self.branches_list.append(&row);
+				}
+			}
+			
+			// TODO: Add remotes display
+		} else {
+			// Show the placeholder
+			self.placeholder.set_visible(true);
+		}
 	}
 } 
